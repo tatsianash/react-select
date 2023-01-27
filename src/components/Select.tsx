@@ -1,33 +1,56 @@
 import React, { useEffect, useState } from 'react';
 import styles from './select.module.css';
 
-type SelectOption = {
+export type SelectOption = {
   label: string;
   value: string | number;
 };
 
-type SelectProps = {
+type SingleSelectProps = {
+  multi?: false;
   value?: SelectOption;
   onChange: (value: SelectOption | undefined) => void;
-  options: SelectOption[];
 };
+type MultiSelectProps = {
+  multi: true;
+  value: SelectOption[];
+  onChange: (value: SelectOption[]) => void;
+};
+type SelectProps = {
+  options: SelectOption[];
+} & (SingleSelectProps | MultiSelectProps);
 
-export default function Select({ value, onChange, options }: SelectProps) {
+export default function Select({
+  multi,
+  value,
+  onChange,
+  options,
+}: SelectProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [highlightedIndex, setHighlightedIndex] = useState<number | null>(null);
-  function isSameElement(option: SelectOption) {
-    return option.value === value?.value && option.label === value?.label;
-  }
+
   function clearOptions() {
-    onChange(undefined);
+    multi ? onChange([]) : onChange(undefined);
   }
 
   function selectOption(option: SelectOption) {
-    if (!isSameElement(option)) onChange(option);
+    if (multi) {
+      if (value.includes(option)) {
+        onChange(value.filter((o) => o !== option));
+      } else {
+        onChange([...value, option]);
+      }
+    } else if (option.value !== value?.value && option.label !== value?.label) {
+      onChange(option);
+    }
   }
 
   function isOptionSelected(option: SelectOption) {
-    return isSameElement(option);
+    if (multi) {
+      return value.includes(option);
+    } else {
+      return option.value === value?.value && option.label === value?.label;
+    }
   }
 
   useEffect(() => {
@@ -40,15 +63,35 @@ export default function Select({ value, onChange, options }: SelectProps) {
       tabIndex={0}
       onBlur={() => setIsOpen(false)}
       onClick={() => setIsOpen((prev) => !prev)}>
-      <span className={styles.value}>{value?.label}</span>
-      <button
-        onClick={(e) => {
-          e.stopPropagation();
-          clearOptions();
-        }}
-        className={styles['clear-btn']}>
-        &times;
-      </button>
+      <span className={styles.value}>
+        {multi ? (
+          value?.map((v: SelectOption) => (
+            <>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  selectOption(v);
+                }}
+                className={styles['option-badge']}>
+                {v?.label}
+                <span className={styles['remove-btn']}> &times;</span>{' '}
+              </button>
+            </>
+          ))
+        ) : (
+          <>
+            <span className={styles.value}>{value?.label}</span>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                clearOptions();
+              }}
+              className={styles['clear-btn']}>
+              &times;
+            </button>
+          </>
+        )}
+      </span>
       <div className={styles.divider}></div>
       <div className={styles.caret}></div>
       <ul className={`${styles.options} ${isOpen ? styles.show : ''}`}>
