@@ -49,7 +49,7 @@
   margin: 0;
   padding: 0;
   list-style: none;
-  /* display: none; */
+  display: none;
   max-height: 15em;
   overflow-y: auto;
   border: 0.01em solid #777;
@@ -69,10 +69,10 @@
   cursor: pointer;
 }
 
-.option.highlighted {
-  background-color: rgb(28, 104, 65);
-}
-
 .option.selected {
   background-color: rgb(8, 237, 119);
+}
+
+.option.highlighted {
+  background-color: rgb(28, 104, 65);
 }
